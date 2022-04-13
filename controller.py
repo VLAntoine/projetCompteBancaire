@@ -1,31 +1,6 @@
 from model import *
-import re
-
-# le regex qui décrit l'écriture des nombres décimaux
-PATTERN_DECIMAL = re.compile("^[-+]{0,1}[0-9]{1,}[.]{0,1}[0-9]{0,}$")
-
-
-class EntreeUtilisateurException(Exception):
-    """
-    Exception renvoyée en cas d'erreur d'entrée de l'utilisateur (s'il tape des lettres alors qu'on attend des
-    chiffres par exemple)
-    """
-    pass
-
-
-class DecouvertSurLeCompteException(Exception):
-    """
-    Exception si l'opération que cherche à faire l'utilisateur rend son solde inférieur à la limite de découvert
-    autorisée
-    """
-    pass
-
-
-class ValeurOperationNulleException(Exception):
-    """
-    Exception si l'utilisateur cherche à faire un virement ou un retrait nul
-    """
-    pass
+from util import *
+from exception import *
 
 
 class Controller:
@@ -42,7 +17,7 @@ class Controller:
         self.__compte_courant = compte_courant
         self.__compte_epargne = compte_epargne
 
-    def traiter_requete(self, requete: dict()):
+    def traiter_requete(self, requete: dict):
         """
         Transmet la requête de l'utilisateur, transmise sous la forme d'un dictionnaire contenant 2 clés :
         - "compte" qui a pour valeur associée "epargne" ou "courant"
@@ -90,49 +65,3 @@ class Controller:
         except (EntreeUtilisateurException, ValeurOperationNulleException, DecouvertSurLeCompteException) as erreur:
             reponse["erreur"] = str(erreur)
             return reponse
-
-
-def check_requete_valide(requete: dict()):
-    """
-    Fonction qui teste la validité de la requête de l'utilisateur, qui est un dictionnaire
-    Lève une exception en cas de non conformité
-    """
-
-    # la requête doit contenir une clé "compte"
-    if "compte" not in requete.keys():
-        raise EntreeUtilisateurException("Vous devez specifier un compte")
-    # la requête doit contenir une clé "valeur"
-    elif "valeur" not in requete.keys():
-        raise EntreeUtilisateurException("Vous devez specifier une valeur")
-    # la valeur associée à la clé "compte" est soit "epargne", soit "courant"
-    elif requete["compte"] not in ["epargne", "courant"]:
-        raise EntreeUtilisateurException("Le compte doit etre soit courant soit epargne")
-    # la valeur associée à la clé "valeur" est une string qui décrit un décimal
-    elif not PATTERN_DECIMAL.match(requete["valeur"]):
-        raise EntreeUtilisateurException("La valeur doit etre un nombre décimal")
-
-
-def check_valeur_non_nulle(valeur: int):
-    """
-    Lève une exception si la valeur entrée par l'utilisateur est égale à 0
-    On considère que ce n'est ni un virement, ni un retrait
-    """
-    if valeur == 0:
-        raise ValeurOperationNulleException("Vous ne pouvez pas retirer ou virer une somme nulle sur le compte")
-
-
-def check_au_dela_du_decouvert(compte: Compte, valeur: float):
-    """
-    Lève une exception si la valeur obtenue à la fin de toutes les opérations est inférieur à la limite de découvert
-    autorisée (dans le cas d'un compte courant) ou à zéro (pour un compte épargne)
-    """
-
-    # si l'opération n'est pas valable
-    if not compte.operation_valable(valeur):
-
-        # on lève une exception adaptée au type de compte
-        if type(compte) == CompteCourant:
-            raise DecouvertSurLeCompteException("Vous ne pouvez pas retirer au-delà de la limite de découvert "
-                                                "autorisee")
-        elif type(compte) == CompteEpargne:
-            raise DecouvertSurLeCompteException("Vous ne pouvez pas retirer au-delà de 0")
