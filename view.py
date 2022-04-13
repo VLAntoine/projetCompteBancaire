@@ -135,8 +135,11 @@ class AffichageLigneDeCommande:
             self.continuer = ""
 
             # demande à l'utilisateur sur quel compte il veut faire les opérations
-            print("Sur quel compte voulez-vous effectuer les opérations ? (epargne : taper e / courant : taper c)")
-            compte_en_cours = input()
+            compte_en_cours = ""
+            while compte_en_cours not in ["e", "c"]:
+                print("Sur quel compte voulez-vous effectuer les opérations ? (epargne : taper e / courant : taper c)")
+                compte_en_cours = input()
+
             if compte_en_cours == "e":
                 compte_en_cours = "epargne"
             elif compte_en_cours == "c":
