@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class Compte(ABC):
@@ -44,7 +44,15 @@ class Compte(ABC):
         """
         self._solde += valeur
 
-    def info(self) -> dict():
+    @abstractmethod
+    def operation_valable(self, valeur: float):
+        """
+        Méthode abstraite qui retourne True si le nouveau solde après l'opération de l'utilisateur est supérieur à la
+        limite autorisée (0 pour un compte épargne, l'autorisation de découvert pour un compte courant)
+        """
+        pass
+
+    def info(self) -> dict:
         """
         Retourne les informations sur le compte sous la forme d'un dictionnaire
         """
@@ -82,6 +90,17 @@ class CompteCourant(Compte):
         """
         return self.__pourcentage_agios
 
+    def operation_valable(self, valeur):
+        """
+        True si l'opération demandée par l'utilisateur est valable, i.e:
+        - soit parce que le nouveau solde (après l'opération) est supérieur à 0
+        - soit parce que la valeur absolue du nouveau solde est inférieure à l'autorisation de découvert
+        """
+        valeur_sur_le_compte = self.solde + valeur
+
+        # la valeur absolue de ce qui est sur le compte à la fin ne doit pas être supérieure au découvert autorisé
+        return valeur_sur_le_compte > 0 or -valeur_sur_le_compte < self.autorisation_decouvert
+
     def appliquer_agios(self):
         """
         Intègre les agios au calcul du nouveau solde
@@ -102,6 +121,16 @@ class CompteEpargne(Compte):
         """
         super(CompteEpargne, self).__init__(numero_compte, nom_proprietaire, solde)
         self.__pourcentage_interets = pourcentage_interets
+
+    def operation_valable(self, valeur):
+        """
+        True si l'opération demandée par l'utilisateur est valable, i.e si le nouveau solde (après l'opération) est
+        supérieur à 0
+        """
+        valeur_sur_le_compte = self.solde + valeur
+
+        # la valeur absolue de ce qui est sur le compte à la fin ne doit pas être supérieure à 0
+        return valeur_sur_le_compte > 0
 
     def appliquer_interets(self):
         """

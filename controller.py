@@ -127,15 +127,12 @@ def check_au_dela_du_decouvert(compte: Compte, valeur: float):
     autorisée (dans le cas d'un compte courant) ou à zéro (pour un compte épargne)
     """
 
-    # une telle exception n'arrive que dans le cas d'un retrait (i.e si la valeur entrée par l'utilisateur < 0)
-    if valeur < 0:
-        valeur_sur_le_compte = compte.solde + valeur
-        # si c'est un compte courant, la valeur absolue de ce qui est sur le compte à la fin ne doit pas être
-        # supérieure au découvert autorisé, sinon exception
+    # si l'opération n'est pas valable
+    if not compte.operation_valable(valeur):
+
+        # on lève une exception adaptée au type de compte
         if type(compte) == CompteCourant:
-            if valeur_sur_le_compte < 0 and -valeur_sur_le_compte > compte.autorisation_decouvert:
-                raise DecouvertSurLeCompteException("Vous ne pouvez pas retirer au-delà de la limite de découvert "
-                                                    "autorisee")
-        # si c'est un compte épargne, le calcul final ne doit pas être négatif, sinon exception
-        elif type(compte) == CompteEpargne and valeur_sur_le_compte < 0:
+            raise DecouvertSurLeCompteException("Vous ne pouvez pas retirer au-delà de la limite de découvert "
+                                                "autorisee")
+        elif type(compte) == CompteEpargne:
             raise DecouvertSurLeCompteException("Vous ne pouvez pas retirer au-delà de 0")
